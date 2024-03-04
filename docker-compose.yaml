@@ -1,0 +1,55 @@
+version: "3.8"
+services:
+
+  database:
+    image: mysql:latest
+   
+    ports: 
+      - 3306:3306
+    
+    container_name: database
+
+    networks:
+      - notes-network
+   
+    environment:
+      - MYSQL_DATABASE=notes
+      - MYSQL_USER=sofi
+      - MYSQL_PASSWORD=java
+      - MYSQL_ROOT_PASSWORD=admin
+   
+    volumes:
+      - mysql_data:/var/lib/mysql
+      #- ./init.sql:/docker-entrypoint-initdb.d/init-db.sql
+  
+  backend:
+    
+    build: 
+      context: ./notes
+      dockerfile: Dockerfile
+    ports: 
+      - 8000:8000
+    
+    container_name: backend
+
+    networks:
+      - notes-network
+
+    depends_on:
+      database:
+          condition: service_started
+    
+    environment:
+      -  SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/notes?createIfNotExists=true
+      -  SPRING_DATASOURCE_USERNAME=sofi
+      -  SPRING_DATASOURCE_PASSWORD=java
+      -  CORS_ALLOWED_ORIGINS=frontend
+    
+
+volumes:
+  mysql_data:
+  #frontend:
+networks:
+  notes-network:
+    driver: bridge
+    
